@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">POCNFC</string>
+    <string name="nfc_service_description">Servicio de pago NFC de GanaMóvil</string>
+    <string name="aid_description">GanaMóvil Payment Service</string>
 </resources>

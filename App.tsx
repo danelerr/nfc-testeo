@@ -1,44 +1,81 @@
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
+ * POC NFC - GanaMóvil
+ * Aplicación de prueba de concepto para pagos NFC
+ * 
  * @format
  */
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import React, { useState } from 'react';
+import { StatusBar, StyleSheet, View } from 'react-native';
 import {
   SafeAreaProvider,
-  useSafeAreaInsets,
+  SafeAreaView,
 } from 'react-native-safe-area-context';
+import CardsScreen from './src/screens/CardsScreen';
+import PaymentScreen from './src/screens/PaymentScreen';
+import SuccessScreen from './src/screens/SuccessScreen';
+import { Card } from './src/types/nfc';
+
+type Screen = 'cards' | 'payment' | 'success';
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+  const [currentScreen, setCurrentScreen] = useState<Screen>('cards');
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [paymentData, setPaymentData] = useState({
+    amount: 0,
+    newBalance: 0,
+  });
+
+  const handleSelectCard = (card: Card) => {
+    setSelectedCard(card);
+    setCurrentScreen('payment');
+  };
+
+  const handlePaymentComplete = (amount: number, newBalance: number) => {
+    setPaymentData({ amount, newBalance });
+    setCurrentScreen('success');
+  };
+
+  const handleCancel = () => {
+    setSelectedCard(null);
+    setCurrentScreen('cards');
+  };
+
+  const handleDone = () => {
+    setSelectedCard(null);
+    setCurrentScreen('cards');
+  };
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <StatusBar barStyle="light-content" backgroundColor="#0A0E27" />
+      <SafeAreaView style={styles.container} edges={['top']}>
+        {currentScreen === 'cards' && (
+          <CardsScreen onSelectCard={handleSelectCard} />
+        )}
+        {currentScreen === 'payment' && selectedCard && (
+          <PaymentScreen
+            card={selectedCard}
+            onPaymentComplete={() => handlePaymentComplete(50, selectedCard.balance - 50)}
+            onCancel={handleCancel}
+          />
+        )}
+        {currentScreen === 'success' && (
+          <SuccessScreen
+            amount={paymentData.amount}
+            newBalance={paymentData.newBalance}
+            onDone={handleDone}
+          />
+        )}
+      </SafeAreaView>
     </SafeAreaProvider>
-  );
-}
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#0A0E27',
   },
 });
 

@@ -1,13 +1,15 @@
 {
-  "name": "POCNFC",
-  "version": "0.0.1",
+  "name": "pocnfc-ganamovil",
+  "version": "1.0.0",
+  "description": "POC de pagos NFC con Host Card Emulation para GanaMóvil",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "backend": "cd backend && npm start"
   },
   "dependencies": {
     "react": "19.2.0",

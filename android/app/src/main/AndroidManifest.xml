@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Permisos NFC -->
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-feature android:name="android.hardware.nfc.hce" android:required="true" />
 
     <application
       android:name=".MainApplication"
@@ -23,5 +26,18 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+      
+      <!-- Servicio HCE para emulación de tarjeta NFC -->
+      <service
+        android:name=".NFCHostApduService"
+        android:exported="true"
+        android:permission="android.permission.BIND_NFC_SERVICE">
+        <intent-filter>
+          <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE"/>
+        </intent-filter>
+        <meta-data
+          android:name="android.nfc.cardemulation.host_apdu_service"
+          android:resource="@xml/apdu_service"/>
+      </service>
     </application>
 </manifest>
