@@ -4,6 +4,10 @@ import android.nfc.cardemulation.HostApduService;
 import android.os.Bundle;
 import android.util.Log;
 import java.util.Arrays;
+import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 /**
  * Servicio HCE (Host Card Emulation) para emular una tarjeta NFC
@@ -28,6 +32,16 @@ public class NFCHostApduService extends HostApduService {
     // Token que se enviará al lector (configurado desde React Native)
     private static String paymentToken = null;
     private static boolean isReady = false;
+    private static ReactContext reactContext = null;
+    private static double requestedAmount = 0.0;
+    
+    /**
+     * Establece el contexto de React Native para enviar eventos
+     */
+    public static void setReactContext(ReactContext context) {
+        reactContext = context;
+        Log.d(TAG, "React context configurado");
+    }
     
     /**
      * Configura el token de pago desde el módulo nativo
@@ -56,11 +70,11 @@ public class NFCHostApduService extends HostApduService {
     
     @Override
     public byte[] processCommandApdu(byte[] commandApdu, Bundle extras) {
-        Log.d(TAG, "📱 Comando APDU recibido: " + bytesToHex(commandApdu));
+        Log.d(TAG, "Comando APDU recibido: " + bytesToHex(commandApdu));
         
         // Verificar si es un comando SELECT AID
         if (isSelectAidApdu(commandApdu)) {
-            Log.d(TAG, "✅ SELECT AID detectado");
+            Log.d(TAG, "SELECT AID detectado");
             
             // Extraer el AID del comando
             byte[] aidBytes = extractAid(commandApdu);
@@ -71,7 +85,7 @@ public class NFCHostApduService extends HostApduService {
             
             // Verificar si el AID coincide con el nuestro
             if (receivedAid.equalsIgnoreCase(AID)) {
-                Log.d(TAG, "🎯 AID coincide - Preparando respuesta con token");
+                Log.d(TAG, "AID coincide!");
                 
                 if (isReady && paymentToken != null) {
                     // Construir respuesta con el token + código de éxito
@@ -85,23 +99,58 @@ public class NFCHostApduService extends HostApduService {
                     response[tokenBytes.length] = (byte) 0x90;
                     response[tokenBytes.length + 1] = (byte) 0x00;
                     
-                    Log.d(TAG, "💳 Enviando token: " + paymentToken);
-                    Log.d(TAG, "📤 Respuesta completa: " + bytesToHex(response));
+                    Log.d(TAG, "Enviando token: " + paymentToken);
                     
                     return response;
                 } else {
-                    Log.w(TAG, "⚠️ Servicio no está listo o no hay token configurado");
+                    Log.w(TAG, "Servicio no está listo o no hay token configurado");
+                    Log.w(TAG, "isReady=" + isReady + ", paymentToken=" + (paymentToken != null ? "set" : "null"));
                     return FILE_NOT_FOUND;
                 }
             } else {
-                Log.w(TAG, "❌ AID no coincide");
+                Log.w(TAG, "AID no coincide. Recibido: " + receivedAid + ", Esperado: " + AID);
                 return FILE_NOT_FOUND;
             }
         }
         
+        // Verificar si es un comando GET PROCESSING OPTIONS (con el monto)
+        if (isGetProcessingOptionsApdu(commandApdu)) {
+            Log.d(TAG, "GET PROCESSING OPTIONS detectado (contiene monto)");
+            
+            // Extraer el monto del comando (bytes 5-8)
+            if (commandApdu.length >= 9) {
+                int amountCents = ((commandApdu[5] & 0xFF) << 24) |
+                                 ((commandApdu[6] & 0xFF) << 16) |
+                                 ((commandApdu[7] & 0xFF) << 8) |
+                                 (commandApdu[8] & 0xFF);
+                requestedAmount = amountCents / 100.0;
+                Log.d(TAG, "Monto recibido del terminal: " + requestedAmount + " Bs (" + amountCents + " centavos)");
+                
+                // Enviar evento a React Native con el monto
+                sendAmountRequestEvent(requestedAmount);
+                
+                // Enviar evento de pago transmitido
+                sendPaymentTransmittedEvent();
+            }
+            
+            // Responder con éxito
+            return SUCCESS;
+        }
+        
         // Para cualquier otro comando, devolver instrucción no soportada
-        Log.w(TAG, "⚠️ Comando no soportado");
+        Log.w(TAG, "Comando no soportado: " + bytesToHex(commandApdu));
         return INSTRUCTION_NOT_SUPPORTED;
+    }
+    
+    /**
+     * Verifica si es un comando GET PROCESSING OPTIONS
+     */
+    private boolean isGetProcessingOptionsApdu(byte[] apdu) {
+        return apdu.length >= 5 && 
+               apdu[0] == (byte) 0x80 &&  // CLA (propietary)
+               apdu[1] == (byte) 0xA8 &&  // INS (GPO)
+               apdu[2] == (byte) 0x00 &&  // P1
+               apdu[3] == (byte) 0x00;    // P2
     }
     
     @Override
@@ -163,6 +212,39 @@ public class NFCHostApduService extends HostApduService {
             sb.append(String.format("%02X", b));
         }
         return sb.toString();
+    }
+    
+    /**
+     * Envía evento a React Native cuando el pago fue transmitido
+     */
+    private void sendPaymentTransmittedEvent() {
+        if (reactContext != null && reactContext.hasActiveCatalystInstance()) {
+            WritableMap params = Arguments.createMap();
+            params.putString("token", paymentToken);
+            params.putDouble("amount", requestedAmount);
+            reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit("onPaymentTransmitted", params);
+            Log.d(TAG, "Evento 'onPaymentTransmitted' enviado a React Native");
+        } else {
+            Log.w(TAG, "No se pudo enviar evento - React context no disponible");
+        }
+    }
+    
+    /**
+     * Envía evento a React Native con el monto solicitado por el terminal
+     */
+    private void sendAmountRequestEvent(double amount) {
+        if (reactContext != null && reactContext.hasActiveCatalystInstance()) {
+            WritableMap params = Arguments.createMap();
+            params.putDouble("amount", amount);
+            reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit("onPaymentAmountRequested", params);
+            Log.d(TAG, "Evento 'onPaymentAmountRequested' enviado con monto: " + amount);
+        } else {
+            Log.w(TAG, "No se pudo enviar evento de monto");
+        }
     }
     
     /**

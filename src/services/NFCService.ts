@@ -1,4 +1,8 @@
-import { NativeModules, NativeEventEmitter, EmitterSubscription } from 'react-native';
+import {
+  NativeModules,
+  NativeEventEmitter,
+  EmitterSubscription,
+} from 'react-native';
 
 const { NFCModule } = NativeModules;
 const nfcEventEmitter = new NativeEventEmitter(NFCModule);
@@ -15,8 +19,32 @@ export interface PaymentResult {
   token?: string;
 }
 
+// ============================================================
+// SERVICIO NFC - CON SEPARACIÓN HCE vs READER MODE
+// ============================================================
+// Los métodos de pago (armPayment, etc.) son los importantes
+// para la funcionalidad HCE real que emula tarjetas NFC.
+// Los métodos de Reader Mode son complementarios para cobros.
+
 class NFCService {
   private listeners: EmitterSubscription[] = [];
+
+  // ============================================================
+  // MÉTODOS DE EVENTOS
+  // ============================================================
+
+  /**
+   * Suscribirse a eventos NFC
+   */
+  addListener(eventName: string, callback: (event: any) => void): EmitterSubscription {
+    const subscription = nfcEventEmitter.addListener(eventName, callback);
+    this.listeners.push(subscription);
+    return subscription;
+  }
+
+  // ============================================================
+  // MÉTODOS GENERALES NFC
+  // ============================================================
 
   /**
    * Verifica si el dispositivo soporta NFC
@@ -66,8 +94,15 @@ class NFCService {
     }
   }
 
+  // ============================================================
+  // MÉTODOS HCE (IMPORTANTE - Modo Pagar)
+  // ============================================================
+  // Estos métodos controlan la funcionalidad HCE real donde el
+  // dispositivo actúa como tarjeta NFC y transmite tokens.
+  // Ver: android/app/src/main/java/.../NFCHostApduService.java
+
   /**
-   * Arma el pago con el token especificado
+   * [HCE] Arma el pago con el token especificado
    * El token estará disponible cuando el teléfono toque el lector
    */
   async armPayment(token: string): Promise<PaymentResult> {
@@ -80,7 +115,7 @@ class NFCService {
   }
 
   /**
-   * Desactiva el pago
+   * [HCE] Desactiva el pago
    */
   async disarmPayment(): Promise<PaymentResult> {
     try {
@@ -92,7 +127,7 @@ class NFCService {
   }
 
   /**
-   * Verifica si el pago está listo
+   * [HCE] Verifica si el pago está listo
    */
   async isPaymentReady(): Promise<boolean> {
     try {
@@ -105,7 +140,7 @@ class NFCService {
   }
 
   /**
-   * Suscribirse a eventos cuando el pago es armado
+   * [HCE] Suscribirse a eventos cuando el pago es armado
    */
   onPaymentArmed(callback: (data: PaymentResult) => void): EmitterSubscription {
     const listener = nfcEventEmitter.addListener('onPaymentArmed', callback);
@@ -114,19 +149,63 @@ class NFCService {
   }
 
   /**
-   * Suscribirse a eventos cuando el pago es desarmado
+   * [HCE] Suscribirse a eventos cuando el pago es desarmado
    */
-  onPaymentDisarmed(callback: (data: PaymentResult) => void): EmitterSubscription {
+  onPaymentDisarmed(
+    callback: (data: PaymentResult) => void,
+  ): EmitterSubscription {
     const listener = nfcEventEmitter.addListener('onPaymentDisarmed', callback);
     this.listeners.push(listener);
     return listener;
   }
 
   /**
-   * Suscribirse a eventos cuando el pago se completa
+   * [HCE] Suscribirse a eventos cuando el pago se completa
    */
   onPaymentComplete(callback: (data: any) => void): EmitterSubscription {
     const listener = nfcEventEmitter.addListener('onPaymentComplete', callback);
+    this.listeners.push(listener);
+    return listener;
+  }
+
+  // ============================================================
+  // MÉTODOS READER MODE (NO RELACIONADO CON HCE)
+  // ============================================================
+  // Estos métodos son para el modo comerciante que LEE tokens NFC.
+  // NO están relacionados con la funcionalidad HCE que es lo importante.
+  // HCE EMITE tokens, Reader Mode los LEE.
+
+  /**
+   * [READER MODE] Inicia el modo lector para detectar tarjetas NFC
+   */
+  async startReaderMode(amount: number): Promise<PaymentResult> {
+    try {
+      const result = await NFCModule.startReaderMode(amount);
+      return result;
+    } catch (error: any) {
+      throw new Error(error.message || 'Error al iniciar Reader Mode');
+    }
+  }
+
+  /**
+   * [READER MODE] Detiene el modo lector
+   */
+  async stopReaderMode(): Promise<PaymentResult> {
+    try {
+      const result = await NFCModule.stopReaderMode();
+      return result;
+    } catch (error: any) {
+      throw new Error(error.message || 'Error al detener Reader Mode');
+    }
+  }
+
+  /**
+   * [READER MODE] Suscribirse a eventos cuando se detecta una tarjeta NFC
+   */
+  onNFCTagDetected(
+    callback: (data: { token: string }) => void,
+  ): EmitterSubscription {
+    const listener = nfcEventEmitter.addListener('onNFCTagDetected', callback);
     this.listeners.push(listener);
     return listener;
   }

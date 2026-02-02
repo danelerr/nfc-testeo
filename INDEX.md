@@ -1,271 +1,381 @@
-# 📑 Índice de Documentación - POC NFC GanaMóvil
+# 📚 Índice de Documentación - POC NFC GanaMóvil
 
-## 🎯 Empieza Aquí
-
-¿No sabes por dónde empezar? Esta guía te ayudará a encontrar lo que necesitas.
+Índice completo de toda la documentación del proyecto.
 
 ---
 
-## 👤 Por Rol
+## 🚀 Comenzar Aquí
 
-### 🏃 Desarrollador - Quiero ejecutar la POC ahora
-1. **[QUICKSTART.md](./QUICKSTART.md)** - 5 minutos para levantar todo
-2. **[README.md](./README.md)** - Entender la arquitectura
-3. **[TESTING.md](./TESTING.md)** - Cómo probar que funciona
+Si eres nuevo en el proyecto, sigue este orden:
 
-### 🔧 Desarrollador - Quiero entender el código
-1. **[README.md](./README.md)** - Arquitectura completa
-2. **[CONFIGURATION.md](./CONFIGURATION.md)** - Configuraciones avanzadas
-3. Revisar código en:
-   - `android/app/src/main/java/com/pocnfc/` - Módulos nativos
-   - `src/` - Código React Native
-   - `backend/` - API Mock
-
-### 🧪 QA / Tester - Quiero probar exhaustivamente
-1. **[QUICKSTART.md](./QUICKSTART.md)** - Setup inicial
-2. **[TESTING.md](./TESTING.md)** - Guía completa de pruebas
-3. **[CONFIGURATION.md](./CONFIGURATION.md)** - Configurar diferentes escenarios
-
-### 👔 Manager / Product Owner - Necesito entender el proyecto
-1. **[SUMMARY.md](./SUMMARY.md)** - Resumen visual (5 min)
-2. **[PRESENTATION.md](./PRESENTATION.md)** - Guía para presentar
-3. **[ROADMAP.md](./ROADMAP.md)** - Plan hacia producción
-
-### 💼 Ejecutivo - Necesito tomar una decisión
-1. **[PRESENTATION.md](./PRESENTATION.md)** - Presentación ejecutiva
-2. **[ROADMAP.md](./ROADMAP.md)** - Costos, timeline, recomendaciones
-3. **[SUMMARY.md](./SUMMARY.md)** - Resumen visual
-
-### 🏗️ Arquitecto - Quiero entender decisiones técnicas
-1. **[README.md](./README.md)** - Arquitectura del sistema
-2. **[CONFIGURATION.md](./CONFIGURATION.md)** - Configuraciones técnicas
-3. **[ROADMAP.md](./ROADMAP.md)** - Evolución hacia producción
+1. **[README.md](./README.md)** - Inicio rápido y visión general
+2. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Arquitectura técnica detallada
+3. **[VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md)** - Diagramas de flujo y visuales
+4. **[HCE-VS-READER-MODE.md](./HCE-VS-READER-MODE.md)** - Conceptos técnicos NFC
 
 ---
 
-## 📋 Por Pregunta
+## 📖 Documentación por Categoría
 
-### "¿Qué es esto y cómo funciona?"
-→ **[SUMMARY.md](./SUMMARY.md)** - Resumen visual en 5 minutos
+### 🎯 Visión General
 
-### "¿Cómo lo ejecuto rápidamente?"
-→ **[QUICKSTART.md](./QUICKSTART.md)** - Setup en 5 minutos
+| Documento | Descripción | Para quién |
+|-----------|-------------|------------|
+| **[README.md](./README.md)** | Documentación principal, inicio rápido, arquitectura de alto nivel | 👥 Todos |
+| **[INDEX.md](./INDEX.md)** | Este documento - índice completo | 👥 Todos |
 
-### "¿Cuál es la arquitectura completa?"
-→ **[README.md](./README.md)** - Documentación técnica completa
+### 🏗️ Arquitectura y Diseño
 
-### "¿Cómo pruebo que funciona correctamente?"
-→ **[TESTING.md](./TESTING.md)** - 6 escenarios de prueba + verificación técnica
+| Documento | Descripción | Para quién |
+|-----------|-------------|------------|
+| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Arquitectura técnica completa, diagramas de clases, secuencia | 👨‍💻 Desarrolladores |
+| **[VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md)** | Flujos visuales, UI mockups, timelines | 🎨 Diseñadores, PM |
+| **[HCE-VS-READER-MODE.md](./HCE-VS-READER-MODE.md)** | Explicación técnica de HCE y Reader Mode | 👨‍💻 Dev Android/NFC |
 
-### "¿Cómo configuro X cosa?"
-→ **[CONFIGURATION.md](./CONFIGURATION.md)** - URLs, AIDs, permisos, logs, etc.
+### 🔧 Backend
 
-### "¿Cuánto cuesta llevarlo a producción?"
-→ **[ROADMAP.md](./ROADMAP.md)** - Timeline de 14-20 meses, $275K-$470K
+| Documento | Descripción | Para quién |
+|-----------|-------------|------------|
+| **[backend/README.md](./backend/README.md)** | Documentación API REST, endpoints, base de datos mock | 🔌 Backend devs, QA |
 
-### "¿Cómo presento esto a stakeholders?"
-→ **[PRESENTATION.md](./PRESENTATION.md)** - Guía completa de presentación
+### 🐛 Correcciones y Fixes
 
-### "¿Es seguro para producción?"
-→ **[ROADMAP.md](./ROADMAP.md)** - Sección "Lo que FALTA para Producción"
+| Documento | Descripción | Para quién |
+|-----------|-------------|------------|
+| **[PAYMENT-FLOW-FIX.md](./PAYMENT-FLOW-FIX.md)** | Fix del problema de pago doble | 👨‍💻 Desarrolladores |
 
-### "¿Por qué no funciona el NFC?"
-→ **[TESTING.md](./TESTING.md)** - Sección "Casos de Error"
-→ **[README.md](./README.md)** - Sección "Troubleshooting"
+### 🤖 Desarrollo con IA
 
----
-
-## 📚 Todos los Documentos
-
-| Archivo | Propósito | Audiencia | Tiempo |
-|---------|-----------|-----------|--------|
-| **[README.md](./README.md)** | Documentación técnica completa | Desarrolladores, Arquitectos | 20 min |
-| **[QUICKSTART.md](./QUICKSTART.md)** | Setup y primera ejecución | Todos | 5 min |
-| **[SUMMARY.md](./SUMMARY.md)** | Resumen visual y conceptos | Todos (introducción) | 5 min |
-| **[TESTING.md](./TESTING.md)** | Guía exhaustiva de pruebas | QA, Developers | 30 min |
-| **[CONFIGURATION.md](./CONFIGURATION.md)** | Configuraciones avanzadas | Developers, DevOps | 15 min |
-| **[ROADMAP.md](./ROADMAP.md)** | Plan hacia producción | Managers, Ejecutivos | 45 min |
-| **[PRESENTATION.md](./PRESENTATION.md)** | Guía de presentación | PMs, Ejecutivos | 10 min |
-| **[INDEX.md](./INDEX.md)** | Este archivo - Navegación | Todos | 5 min |
-| **[backend/README.md](./backend/README.md)** | Documentación del backend | Developers | 10 min |
+| Documento | Descripción | Para quién |
+|-----------|-------------|------------|
+| **[AI-DEVELOPMENT-PROMPT.md](./AI-DEVELOPMENT-PROMPT.md)** | Guía completa para desarrollo con IA (GitHub Copilot) | 🤖 AI devs |
 
 ---
 
-## 🗂️ Estructura de Archivos
+## 📂 Estructura de Documentación
 
 ```
 POCNFC/
 │
-├── 📱 Aplicación Móvil
-│   ├── App.tsx                      # Punto de entrada
-│   ├── src/screens/                 # 3 pantallas UI
-│   ├── src/services/                # Lógica de negocio
-│   └── src/types/                   # Tipos TypeScript
+├── README.md                    ⭐ [Inicio] Visión general + quick start
+├── INDEX.md                     📚 [Índice] Este archivo
+├── ARCHITECTURE.md              🏗️ [Arquitectura] Diagramas técnicos completos
+├── VISUAL-DIAGRAMS.md           🎨 [Visual] Flujos UI, timelines
+├── HCE-VS-READER-MODE.md        📡 [Técnico] Conceptos NFC
+├── PAYMENT-FLOW-FIX.md          🐛 [Fix] Solución pago doble
+├── AI-DEVELOPMENT-PROMPT.md     🤖 [IA] Guía desarrollo con IA
 │
-├── 🤖 Módulo Nativo Android
-│   └── android/app/src/main/java/com/pocnfc/
-│       ├── NFCHostApduService.java  ⭐ Emulación NFC
-│       ├── NFCModule.java           ⭐ Bridge React Native
-│       └── NFCPackage.java
-│
-├── 🖥️ Backend Mock
-│   └── backend/
-│       ├── server.js                ⭐ API REST
-│       └── package.json
-│
-├── 📚 Documentación
-│   ├── README.md                    # Docs principal
-│   ├── QUICKSTART.md                # Inicio rápido
-│   ├── SUMMARY.md                   # Resumen visual
-│   ├── TESTING.md                   # Guía de pruebas
-│   ├── CONFIGURATION.md             # Configuración
-│   ├── ROADMAP.md                   # Plan producción
-│   ├── PRESENTATION.md              # Guía presentación
-│   └── INDEX.md                     # Este archivo
-│
-└── 🛠️ Scripts
-    ├── install.bat                  # Setup Windows
-    └── install.sh                   # Setup Mac/Linux
+└── backend/
+    └── README.md                🔌 [Backend] Documentación API REST
 ```
 
 ---
 
-## 🚀 Flujos Comunes
+## 🎓 Guías de Aprendizaje
 
-### Flujo 1: Primera Vez (Desarrollador)
-```
-1. Leer SUMMARY.md (5 min) - Entender el concepto
-2. Ejecutar QUICKSTART.md (5 min) - Levantar el proyecto
-3. Probar las 3 pantallas (5 min) - Ver que funciona
-4. Leer README.md (20 min) - Entender arquitectura
-5. Explorar código (30 min) - Familiarizarse
-```
+### Para Principiantes en NFC
 
-### Flujo 2: Demostración (PM / Ejecutivo)
-```
-1. Leer SUMMARY.md (5 min) - Entender el concepto
-2. Ver demo en vivo (5 min) - Ejecutar la app
-3. Leer PRESENTATION.md (10 min) - Preparar presentación
-4. Leer ROADMAP.md (30 min) - Entender costos y plan
-5. Presentar a stakeholders (20 min)
-```
+**Ruta de aprendizaje:**
 
-### Flujo 3: Testing Exhaustivo (QA)
-```
-1. Leer QUICKSTART.md (5 min) - Setup
-2. Ejecutar app (5 min)
-3. Seguir TESTING.md (60 min) - 6 escenarios
-4. Documentar resultados (20 min)
-5. Reportar bugs si los hay
-```
+1. 📖 Lee [README.md](./README.md) sección "Cómo Probar"
+2. 📡 Lee [HCE-VS-READER-MODE.md](./HCE-VS-READER-MODE.md) - conceptos básicos
+3. 🎨 Revisa [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md) - flujo de transacción
+4. 🏗️ Estudia [ARCHITECTURE.md](./ARCHITECTURE.md) - protocolo APDU
 
-### Flujo 4: Evaluación para Producción (Decisor)
-```
-1. Leer SUMMARY.md (5 min) - Contexto
-2. Ver demo (5 min) - Entender funcionalidad
-3. Leer ROADMAP.md (45 min) - Costos, timeline, riesgos
-4. Revisar comparativa de opciones (10 min)
-5. Tomar decisión: Aprobar / Posponer / Rechazar
-```
+**Tiempo estimado:** 2-3 horas
 
----
+### Para Desarrolladores React Native
 
-## 🎯 Rutas de Aprendizaje
+**Ruta de aprendizaje:**
 
-### Nivel 1: Conceptos Básicos (30 min)
-- [x] **[SUMMARY.md](./SUMMARY.md)** - ¿Qué es NFC y HCE?
-- [x] **[QUICKSTART.md](./QUICKSTART.md)** - Ver funcionando
-- [x] Demo en vivo
+1. 📖 Lee [README.md](./README.md) sección "Arquitectura del Sistema"
+2. 🏗️ Lee [ARCHITECTURE.md](./ARCHITECTURE.md) - diagrama de clases frontend
+3. 🎨 Revisa [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md) - componentes y responsabilidades
+4. 👨‍💻 Explora código en `src/`
 
-**Resultado:** Entiendes qué hace la POC y la has visto funcionar
+**Archivos clave a revisar:**
+- `src/services/NFCService.ts`
+- `src/screens/PaymentScreen.tsx`
+- `src/screens/ChargeWaitingScreen.tsx`
 
-### Nivel 2: Técnico (2 horas)
-- [x] **[README.md](./README.md)** - Arquitectura completa
-- [x] **[TESTING.md](./TESTING.md)** - Pruebas detalladas
-- [x] **[CONFIGURATION.md](./CONFIGURATION.md)** - Configuraciones
-- [x] Revisar código fuente
+**Tiempo estimado:** 1-2 horas
 
-**Resultado:** Puedes modificar y extender la POC
+### Para Desarrolladores Android/Java
 
-### Nivel 3: Producción (4 horas)
-- [x] **[ROADMAP.md](./ROADMAP.md)** - Plan completo
-- [x] Investigar certificaciones (PCI-DSS, EMVCo)
-- [x] Estudiar protocolos EMV
-- [x] Analizar costos y ROI
+**Ruta de aprendizaje:**
 
-**Resultado:** Puedes liderar el proyecto hacia producción
+1. 📡 Lee [HCE-VS-READER-MODE.md](./HCE-VS-READER-MODE.md) - completo
+2. 🏗️ Lee [ARCHITECTURE.md](./ARCHITECTURE.md) - protocolo APDU detallado
+3. 🎨 Revisa [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md) - bytes APDU
+4. 👨‍💻 Explora código en `android/app/src/main/java/`
+
+**Archivos clave a revisar:**
+- `NFCHostApduService.java` ⭐
+- `NFCModule.java`
+- `AndroidManifest.xml`
+- `res/xml/apduservice.xml`
+
+**Tiempo estimado:** 2-3 horas
+
+### Para Desarrolladores Backend
+
+**Ruta de aprendizaje:**
+
+1. 🔌 Lee [backend/README.md](./backend/README.md) - completo
+2. 🏗️ Lee [ARCHITECTURE.md](./ARCHITECTURE.md) - arquitectura de datos
+3. 🎨 Revisa [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md) - flujo de datos
+4. 👨‍💻 Explora `backend/server.js`
+
+**Endpoints clave:**
+- `POST /charge-payment` - procesamiento de cobros
+- `POST /authorize-payment` - autorización de pagos
+- `GET /card-token` - gestión de tarjetas
+
+**Tiempo estimado:** 1 hora
 
 ---
 
 ## 🔍 Búsqueda Rápida
 
-### Backend
-- **Endpoints API:** [backend/README.md](./backend/README.md)
-- **Configurar URL:** [CONFIGURATION.md](./CONFIGURATION.md) → URLs de API
-- **Testing backend:** [TESTING.md](./TESTING.md) → Prueba 2
+### Por Concepto
 
-### NFC / Android
-- **Configurar AID:** [CONFIGURATION.md](./CONFIGURATION.md) → AID
-- **Permisos:** [README.md](./README.md) → Componentes → Módulo Nativo
-- **Protocolo APDU:** [README.md](./README.md) → Protocolo APDU
-- **Troubleshooting NFC:** [README.md](./README.md) → Troubleshooting
+| Concepto | Archivo | Sección |
+|----------|---------|---------|
+| **HCE (Host Card Emulation)** | [HCE-VS-READER-MODE.md](./HCE-VS-READER-MODE.md) | Completo |
+| **APDU Protocol** | [ARCHITECTURE.md](./ARCHITECTURE.md) | Protocolo APDU |
+| **AID (Application ID)** | [README.md](./README.md) | Protocolo APDU |
+| **Reader Mode** | [HCE-VS-READER-MODE.md](./HCE-VS-READER-MODE.md) | Reader Mode |
+| **Token estático** | [ARCHITECTURE.md](./ARCHITECTURE.md) | Seguridad |
+| **Pago doble** | [PAYMENT-FLOW-FIX.md](./PAYMENT-FLOW-FIX.md) | Completo |
+| **Backend endpoints** | [backend/README.md](./backend/README.md) | API Endpoints |
+| **Eventos NFC** | [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md) | Flujo de Eventos |
+| **Diagrama de clases** | [ARCHITECTURE.md](./ARCHITECTURE.md) | Diagrama de Clases |
+| **Timeline transacción** | [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md) | Timeline |
 
-### React Native
-- **Pantallas:** `src/screens/` - CardsScreen, PaymentScreen, SuccessScreen
-- **Servicios:** `src/services/` - NFCService, APIService
-- **Tipos:** `src/types/nfc.ts`
+### Por Archivo de Código
 
-### Pruebas
-- **Guía completa:** [TESTING.md](./TESTING.md)
-- **Prueba rápida:** [QUICKSTART.md](./QUICKSTART.md) → Probar en 30 segundos
-
-### Producción
-- **Costos:** [ROADMAP.md](./ROADMAP.md) → Estimación de Costos
-- **Timeline:** [ROADMAP.md](./ROADMAP.md) → Timeline Estimado
-- **Seguridad:** [ROADMAP.md](./ROADMAP.md) → Lo que FALTA → Seguridad
-
----
-
-## ❓ FAQ sobre Documentación
-
-### "¿Por dónde empiezo?"
-→ [SUMMARY.md](./SUMMARY.md) si quieres contexto, o [QUICKSTART.md](./QUICKSTART.md) si quieres acción inmediata.
-
-### "¿Necesito leer todo?"
-No. Usa la sección "Por Rol" arriba para ver qué documentos son relevantes para ti.
-
-### "¿Hay un video tutorial?"
-No incluido, pero puedes grabar uno siguiendo [QUICKSTART.md](./QUICKSTART.md).
-
-### "¿Puedo contribuir a la documentación?"
-Sí, esta es una POC interna. Mejoras bienvenidas.
-
-### "¿Hay documentación de API?"
-Sí: [backend/README.md](./backend/README.md) documenta todos los endpoints.
+| Archivo | Documentación | Sección |
+|---------|---------------|---------|
+| **NFCHostApduService.java** | [HCE-VS-READER-MODE.md](./HCE-VS-READER-MODE.md) | Implementación HCE |
+| **NFCModule.java** | [ARCHITECTURE.md](./ARCHITECTURE.md) | Capa Nativa |
+| **PaymentScreen.tsx** | [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md) | Flujo Cliente |
+| **ChargeWaitingScreen.tsx** | [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md) | Flujo Comerciante |
+| **NFCService.ts** | [ARCHITECTURE.md](./ARCHITECTURE.md) | Servicios |
+| **APIService.ts** | [backend/README.md](./backend/README.md) | Cliente HTTP |
+| **server.js** | [backend/README.md](./backend/README.md) | Backend Mock |
 
 ---
 
-## 📞 Contactos
+## 🛠️ Recursos de Desarrollo
 
-Para preguntas sobre:
-- **Arquitectura técnica:** Ver [README.md](./README.md)
-- **Errores/Bugs:** Ver [TESTING.md](./TESTING.md) → Troubleshooting
-- **Decisión de negocio:** Ver [ROADMAP.md](./ROADMAP.md)
+### Setup Inicial
+
+**Prerequisitos:**
+- Node.js 20+
+- Android Studio
+- JDK 17+
+- Dispositivo Android físico con NFC
+
+**Guías:**
+1. [README.md](./README.md) - Sección "Inicio Rápido"
+2. [backend/README.md](./backend/README.md) - Instalación backend
+
+### Testing
+
+**Guías de prueba:**
+- [README.md](./README.md) - Sección "Cómo Probar"
+- [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md) - Checklist de pruebas
+
+### Debugging
+
+**Problemas comunes:**
+- [README.md](./README.md) - Sección "Solución de Problemas"
+- [PAYMENT-FLOW-FIX.md](./PAYMENT-FLOW-FIX.md) - Pago doble
+- [backend/README.md](./backend/README.md) - Troubleshooting backend
+
+**Logs:**
+```bash
+# Android
+adb logcat | grep NFC
+
+# Backend
+npm run dev  # con auto-reload
+
+# React Native
+# Logs automáticos en Metro Bundler
+```
 
 ---
 
-## 🎉 Conclusión
+## 📊 Métricas y Rendimiento
 
-Tienes 8 documentos completos que cubren desde conceptos básicos hasta plan de producción.
-
-**Próximo paso sugerido:** 
-1. Lee [SUMMARY.md](./SUMMARY.md) (5 min)
-2. Ejecuta [QUICKSTART.md](./QUICKSTART.md) (5 min)
-3. Luego decide qué más explorar según tu rol
+**Documentación:**
+- [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md) - Sección "Métricas de Rendimiento"
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - Sección "Métricas del Sistema"
 
 ---
 
-**Última actualización:** 26 de enero de 2026
-**Total de documentos:** 8
-**Total de páginas:** ~50
-**Tiempo total de lectura:** ~2.5 horas (todo)
+## 🔐 Seguridad
+
+**Documentación:**
+- [README.md](./README.md) - Sección "Seguridad"
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - Sección "Flujo de Seguridad"
+- [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md) - Matriz de Seguridad
+
+**⚠️ Importante:** Este es un POC educativo. NO usar en producción sin:
+- Tokenización dinámica EMV
+- Certificación PCI-DSS
+- Auditoría de seguridad completa
+
+---
+
+## 🌐 Enlaces Externos
+
+### Documentación Oficial
+
+- [Android HCE Guide](https://developer.android.com/guide/topics/connectivity/nfc/hce)
+- [React Native Docs](https://reactnative.dev/)
+- [Express.js Docs](https://expressjs.com/)
+- [ISO 7816-4 Standard](https://www.iso.org/standard/54550.html)
+
+### Comunidad
+
+- [Stack Overflow - Android NFC](https://stackoverflow.com/questions/tagged/android-nfc)
+- [React Native Community](https://reactnative.dev/community/overview)
+
+---
+
+## 🤝 Contribuir
+
+### Antes de contribuir
+
+1. Lee toda la documentación relevante
+2. Verifica que el cambio no rompa funcionalidad existente
+3. Actualiza documentación si es necesario
+
+### Documentación a actualizar
+
+Si modificas código, actualiza estos archivos:
+
+| Cambio en | Actualizar |
+|-----------|------------|
+| `NFCHostApduService.java` | [HCE-VS-READER-MODE.md](./HCE-VS-READER-MODE.md), [ARCHITECTURE.md](./ARCHITECTURE.md) |
+| `src/screens/*.tsx` | [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md) |
+| `backend/server.js` | [backend/README.md](./backend/README.md) |
+| Endpoints API | [backend/README.md](./backend/README.md), [ARCHITECTURE.md](./ARCHITECTURE.md) |
+| Flujo de pago | [VISUAL-DIAGRAMS.md](./VISUAL-DIAGRAMS.md), [README.md](./README.md) |
+
+---
+
+## 📝 Historial de Cambios
+
+### v1.0.0 (2026-02-02)
+
+**Documentación creada:**
+- ✅ README.md completo con diagramas
+- ✅ ARCHITECTURE.md con diagramas técnicos
+- ✅ VISUAL-DIAGRAMS.md con flujos visuales
+- ✅ backend/README.md documentación API
+- ✅ INDEX.md (este archivo)
+
+**Cambios en código:**
+- ✅ Fix pago doble (solo ChargeWaitingScreen llama backend)
+- ✅ Protocolo APDU de 2 comandos implementado
+- ✅ Reader Mode funcional con IsoDep
+- ✅ HCE Service completo con eventos
+
+---
+
+## 🆘 Ayuda y Soporte
+
+### Preguntas Frecuentes
+
+**P: ¿Por qué el emulador no funciona?**  
+R: El emulador de Android NO soporta NFC. Debes usar dispositivos físicos.
+
+**P: ¿Por qué se procesan pagos 2 veces?**  
+R: Lee [PAYMENT-FLOW-FIX.md](./PAYMENT-FLOW-FIX.md). Está corregido en v1.0.0.
+
+**P: ¿Por qué los saldos se reinician?**  
+R: Base de datos en memoria. Lee [backend/README.md](./backend/README.md) sección "Persistencia".
+
+**P: ¿Cómo implemento en producción?**  
+R: NO usar este código en producción. Requiere EMV tokenization, PCI-DSS, etc.
+
+### Contacto
+
+Para más información sobre el proyecto, revisar:
+- 📖 Documentación completa en este directorio
+- 🐛 Issues conocidos: [PAYMENT-FLOW-FIX.md](./PAYMENT-FLOW-FIX.md)
+- 🤖 Guía de IA: [AI-DEVELOPMENT-PROMPT.md](./AI-DEVELOPMENT-PROMPT.md)
+
+---
+
+## 📄 Licencia
+
+Este es un **POC (Proof of Concept)** con fines educativos.
+
+**NO USAR EN PRODUCCIÓN** sin implementar:
+- ✅ Tokenización dinámica (EMV tokens)
+- ✅ Cifrado de comunicación NFC
+- ✅ Certificación PCI-DSS
+- ✅ Autenticación de dispositivos
+- ✅ Auditoría de seguridad completa
+
+---
+
+**Índice creado**: 2026-02-02  
+**Versión**: 1.0.0  
+**Última actualización**: 2026-02-02  
+**Autor**: Equipo GanaMóvil
+
+---
+
+## 🗺️ Mapa de Navegación
+
+```
+📚 INDEX.md (Estás aquí)
+    │
+    ├─🚀 README.md ..................... Inicio rápido
+    │   ├─ Instalación
+    │   ├─ Arquitectura de alto nivel
+    │   └─ Cómo probar
+    │
+    ├─🏗️ ARCHITECTURE.md .............. Arquitectura técnica
+    │   ├─ Diagrama de clases
+    │   ├─ Diagrama de secuencia
+    │   ├─ Protocolo APDU detallado
+    │   └─ Estructura de archivos
+    │
+    ├─🎨 VISUAL-DIAGRAMS.md ............ Diagramas visuales
+    │   ├─ Flujos UI
+    │   ├─ Timeline de transacción
+    │   ├─ Bytes APDU
+    │   └─ Métricas de rendimiento
+    │
+    ├─📡 HCE-VS-READER-MODE.md ......... Conceptos NFC
+    │   ├─ Qué es HCE
+    │   ├─ Qué es Reader Mode
+    │   ├─ Implementación Android
+    │   └─ Comparación técnica
+    │
+    ├─🐛 PAYMENT-FLOW-FIX.md ........... Fix pago doble
+    │   ├─ Problema identificado
+    │   ├─ Solución implementada
+    │   └─ Verificación
+    │
+    ├─🤖 AI-DEVELOPMENT-PROMPT.md ...... Guía IA
+    │   ├─ Contexto del proyecto
+    │   ├─ Arquitectura
+    │   └─ Mejores prácticas
+    │
+    └─🔌 backend/README.md ............. API Backend
+        ├─ Endpoints
+        ├─ Base de datos mock
+        ├─ Testing
+        └─ Deployment
+```
+
+---
+
+**¡Gracias por usar POC NFC GanaMóvil!** 🚀

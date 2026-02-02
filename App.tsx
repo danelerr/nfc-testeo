@@ -1,82 +1,108 @@
-/**
- * POC NFC - GanaMóvil
- * Aplicación de prueba de concepto para pagos NFC
- * 
- * @format
- */
-
-import React, { useState } from 'react';
-import { StatusBar, StyleSheet, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  SafeAreaView,
-} from 'react-native-safe-area-context';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar, Text, StyleSheet } from 'react-native';
 import CardsScreen from './src/screens/CardsScreen';
 import PaymentScreen from './src/screens/PaymentScreen';
 import SuccessScreen from './src/screens/SuccessScreen';
-import { Card } from './src/types/nfc';
+import ChargeHomeScreen from './src/screens/ChargeHomeScreen';
+import ChargeWaitingScreen from './src/screens/ChargeWaitingScreen';
+import ChargeSuccessScreen from './src/screens/ChargeSuccessScreen';
+import AccountSelectionScreen from './src/screens/AccountSelectionScreen';
+import { PayStackParamList, ChargeStackParamList, TabParamList } from './src/types/navigation';
 
-type Screen = 'cards' | 'payment' | 'success';
+
+const PayStack = createNativeStackNavigator<PayStackParamList>();
+const ChargeStack = createNativeStackNavigator<ChargeStackParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
+
+function PayStackNavigator() {
+  return (
+    <PayStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: '#F8FAF9' },
+        animation: 'slide_from_right',
+      }}
+    >
+      <PayStack.Screen name="Cards" component={CardsScreen} />
+      <PayStack.Screen name="Payment" component={PaymentScreen} />
+      <PayStack.Screen name="Success" component={SuccessScreen} />
+    </PayStack.Navigator>
+  );
+}
+
+function ChargeStackNavigator() {
+  return (
+    <ChargeStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: '#F8FAF9' },
+        animation: 'slide_from_right',
+      }}
+    >
+      <ChargeStack.Screen name="AccountSelection" component={AccountSelectionScreen} />
+      <ChargeStack.Screen name="ChargeHome" component={ChargeHomeScreen} />
+      <ChargeStack.Screen name="ChargeWaiting" component={ChargeWaitingScreen} />
+      <ChargeStack.Screen name="ChargeSuccess" component={ChargeSuccessScreen} />
+    </ChargeStack.Navigator>
+  );
+}
+
+// Iconos de las tabs
+const PayIcon = () => <Text style={styles.textTab}>💳</Text>;
+const ChargeIcon = () => <Text style={styles.textTab}>💵</Text>;
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('cards');
-  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
-  const [paymentData, setPaymentData] = useState({
-    amount: 0,
-    newBalance: 0,
-  });
-
-  const handleSelectCard = (card: Card) => {
-    setSelectedCard(card);
-    setCurrentScreen('payment');
-  };
-
-  const handlePaymentComplete = (amount: number, newBalance: number) => {
-    setPaymentData({ amount, newBalance });
-    setCurrentScreen('success');
-  };
-
-  const handleCancel = () => {
-    setSelectedCard(null);
-    setCurrentScreen('cards');
-  };
-
-  const handleDone = () => {
-    setSelectedCard(null);
-    setCurrentScreen('cards');
-  };
-
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle="light-content" backgroundColor="#0A0E27" />
-      <SafeAreaView style={styles.container} edges={['top']}>
-        {currentScreen === 'cards' && (
-          <CardsScreen onSelectCard={handleSelectCard} />
-        )}
-        {currentScreen === 'payment' && selectedCard && (
-          <PaymentScreen
-            card={selectedCard}
-            onPaymentComplete={() => handlePaymentComplete(50, selectedCard.balance - 50)}
-            onCancel={handleCancel}
+      <StatusBar barStyle={'dark-content'}/>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={{
+            headerShown: false,
+            tabBarActiveTintColor: '#4A9B7F',
+            tabBarInactiveTintColor: '#8A9A96',
+            tabBarStyle: {
+              backgroundColor: '#FFFFFF',
+              borderTopColor: '#D4E5DE',
+              borderTopWidth: 1,
+              height: 60,
+              paddingBottom: 8,
+              paddingTop: 8,
+            },
+            tabBarLabelStyle: {
+              fontSize: 12,
+              fontWeight: '600',
+            },
+          }}
+        >
+          <Tab.Screen 
+            name="PayMode" 
+            component={PayStackNavigator}
+            options={{
+              title: 'Pagar',
+              tabBarIcon: PayIcon,
+            }}
           />
-        )}
-        {currentScreen === 'success' && (
-          <SuccessScreen
-            amount={paymentData.amount}
-            newBalance={paymentData.newBalance}
-            onDone={handleDone}
+          <Tab.Screen 
+            name="ChargeMode" 
+            component={ChargeStackNavigator}
+            options={{
+              title: 'Cobrar',
+              tabBarIcon: ChargeIcon,
+            }}
           />
-        )}
-      </SafeAreaView>
+        </Tab.Navigator>
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0A0E27',
-  },
-});
+  textTab: { fontSize: 24 }
+})
 
 export default App;

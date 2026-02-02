@@ -1,76 +1,58 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
-  Animated,
+  Vibration,
 } from 'react-native';
-import { SuccessScreenProps } from '../types/navigation';
+import { ChargeSuccessScreenProps } from '../types/navigation';
 
-// ============================================================
-// PANTALLA DE ÉXITO - FUNCIONALIDAD HCE (IMPORTANTE)
-// ============================================================
-// Esta pantalla muestra el resultado del pago HCE.
-// El pago fue transmitido vía NFC usando Host Card Emulation.
+export default function ChargeSuccessScreen({ route, navigation }: ChargeSuccessScreenProps) {
+  const { amount, transactionId, newBalance } = route.params;
 
-export default function SuccessScreen({ route, navigation }: SuccessScreenProps) {
-  const { amount, newBalance } = route.params;
-  const [scaleAnim] = React.useState(new Animated.Value(0));
-
-  React.useEffect(() => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      tension: 50,
-      friction: 7,
-      useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
+  useEffect(() => {
+    // Vibración de éxito al montar
+    Vibration.vibrate([0, 200, 100, 200]);
+  }, []);
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Animated.View
-          style={[
-            styles.successIcon,
-            {
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}>
-          <Text style={styles.successText}>OK</Text>
-        </Animated.View>
+        <View style={styles.successIcon}>
+          <Text style={styles.statusText}>OK</Text>
+        </View>
 
-        <Text style={styles.title}>¡Pago Exitoso!</Text>
-        <Text style={styles.subtitle}>Tu transacción se procesó correctamente</Text>
+        <Text style={styles.title}>Cobro Exitoso</Text>
+        <Text style={styles.subtitle}>El pago se proceso correctamente</Text>
 
         <View style={styles.amountContainer}>
-          <Text style={styles.amountLabel}>Monto Pagado</Text>
+          <Text style={styles.amountLabel}>Monto Cobrado</Text>
           <Text style={styles.amount}>
             ${amount.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
           </Text>
         </View>
 
-        <View style={styles.balanceContainer}>
-          <Text style={styles.balanceLabel}>Nuevo Saldo</Text>
-          <Text style={styles.balance}>
+        <View style={styles.accountInfo}>
+          <Text style={styles.accountLabel}>Nuevo Saldo</Text>
+          <Text style={styles.accountName}>
             ${newBalance.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
           </Text>
         </View>
 
+        <View style={styles.tokenContainer}>
+          <Text style={styles.tokenLabel}>ID de Transaccion</Text>
+          <Text style={styles.token}>{transactionId}</Text>
+        </View>
+
         <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
-            Tu pago NFC se completo sin problemas
-          </Text>
-          <Text style={styles.infoText}>
-            Tecnologia: Host Card Emulation
-          </Text>
-          <Text style={styles.infoText}>
-            Conexion: Segura y Encriptada
-          </Text>
+          <Text style={styles.infoText}>Pago recibido por NFC</Text>
+          <Text style={styles.infoText}>Transaccion completada</Text>
+          <Text style={styles.infoText}>Operacion segura</Text>
         </View>
       </View>
 
-      <Pressable style={styles.doneButton} onPress={() => navigation.navigate('Cards')}>
+      <Pressable style={styles.doneButton} onPress={() => navigation.navigate('AccountSelection')}>
         <Text style={styles.doneButtonText}>Finalizar</Text>
       </Pressable>
     </View>
@@ -83,10 +65,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAF9',
     padding: 20,
   },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  processingText: {
+    fontSize: 18,
+    color: '#6B7C78',
+    marginTop: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#fe1f01',
+    marginVertical: 20,
+    textAlign: 'center',
   },
   successIcon: {
     width: 120,
@@ -102,7 +99,10 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
   },
-  successText: {
+  errorIcon: {
+    backgroundColor: '#FFB4AB',
+  },
+  statusText: {
     fontSize: 48,
     fontWeight: 'bold',
     color: '#FFFFFF',
@@ -143,13 +143,39 @@ const styles = StyleSheet.create({
   amount: {
     fontSize: 36,
     fontWeight: '700',
-    color: '#2C3E3A',
+    color: '#2D7A5F',
   },
-  balanceContainer: {
+  accountInfo: {
+    backgroundColor: '#E8F5F0',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    width: '100%',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#C4E0D3',
+  },
+  accountLabel: {
+    fontSize: 12,
+    color: '#5A6B66',
+    marginBottom: 4,
+  },
+  accountName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2C3E3A',
+    marginBottom: 2,
+  },
+  accountNumber: {
+    fontSize: 14,
+    color: '#4A9B7F',
+    fontFamily: 'monospace',
+  },
+  tokenContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 24,
-    marginBottom: 32,
+    padding: 16,
+    marginBottom: 16,
     width: '100%',
     alignItems: 'center',
     borderWidth: 1,
@@ -160,16 +186,17 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  balanceLabel: {
+  tokenLabel: {
     fontSize: 14,
     color: '#6B7C78',
     marginBottom: 8,
     fontWeight: '500',
   },
-  balance: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#2D7A5F',
+  token: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2C3E3A',
+    letterSpacing: 1,
   },
   infoBox: {
     backgroundColor: '#E8F5F0',

@@ -1,11 +1,6 @@
-import { Card, Transaction, PaymentResponse } from '../types/nfc';
+import { Card, Transaction, PaymentResponse, MerchantAccount } from '../types/nfc';
 
-// Configurar la URL base de tu backend
-// Para desarrollo local con ngrok: reemplaza con tu URL de ngrok
-// Ejemplo: https://abc123.ngrok.io
-let API_BASE_URL = 'http://10.0.2.2:3000'; // Para emulador Android
-// let API_BASE_URL = 'http://localhost:3000'; // Para iOS simulator
-// let API_BASE_URL = 'https://tu-url-ngrok.ngrok.io'; // Para dispositivo físico
+const API_BASE_URL = 'https://backend-nfc.vercel.app/';
 
 const TIMEOUT = 10000;
 
@@ -30,9 +25,22 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}): Promise
   }
 };
 
+// ============================================================
+// SERVICIO DE API - CON SEPARACIÓN HCE vs READER MODE
+// ============================================================
+// Los métodos marcados como HCE son los importantes para la 
+// funcionalidad real de emulación de tarjetas NFC.
+// Los métodos de comerciante son complementarios (Reader Mode).
+
 class APIService {
+  // ============================================================
+  // MÉTODOS HCE (IMPORTANTE - Modo Pagar)
+  // ============================================================
+  // Estos métodos soportan la funcionalidad HCE real donde el
+  // dispositivo actúa como tarjeta NFC y transmite tokens.
+
   /**
-   * Obtiene todas las tarjetas disponibles
+   * [HCE] Obtiene todas las tarjetas disponibles
    */
   async getCards(): Promise<Card[]> {
     try {
@@ -50,7 +58,7 @@ class APIService {
   }
 
   /**
-   * Obtiene el token de una tarjeta específica
+   * [HCE] Obtiene el token de una tarjeta específica
    */
   async getCardToken(cardId: string): Promise<{ token: string; balance: number }> {
     try {
@@ -71,7 +79,7 @@ class APIService {
   }
 
   /**
-   * Autoriza un pago
+   * [HCE] Autoriza un pago desde el dispositivo cliente
    */
   async authorizePayment(token: string, amount: number, description?: string): Promise<PaymentResponse> {
     try {
@@ -99,7 +107,7 @@ class APIService {
   }
 
   /**
-   * Obtiene el saldo de una tarjeta
+   * [HCE] Obtiene el saldo de una tarjeta
    */
   async getBalance(token: string): Promise<number> {
     try {
@@ -117,7 +125,7 @@ class APIService {
   }
 
   /**
-   * Obtiene el historial de transacciones
+   * [HCE] Obtiene el historial de transacciones
    */
   async getTransactions(): Promise<Transaction[]> {
     try {
@@ -134,11 +142,65 @@ class APIService {
     }
   }
 
+  // ============================================================
+  // MÉTODOS READER MODE (NO RELACIONADO CON HCE)
+  // ============================================================
+  // Estos métodos son para el modo comerciante que usa Reader Mode.
+  // NO están relacionados con la funcionalidad HCE que es lo importante.
+
   /**
-   * Actualiza la URL base del API (útil para cambiar entre localhost y ngrok)
+   * [READER MODE] Obtiene las cuentas del comerciante
    */
-  setBaseURL(url: string) {
-    API_BASE_URL = url;
+  async getMerchantAccounts(): Promise<MerchantAccount[]> {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/merchant-accounts`);
+      const data = await response.json();
+      
+      if (data.success) {
+        return data.accounts;
+      }
+      throw new Error('Error al obtener cuentas');
+    } catch (error: any) {
+      console.error('Error obteniendo cuentas de comerciante:', error);
+      throw new Error(error.message || 'Error de conexión con el servidor');
+    }
+  }
+
+  /**
+   * [READER MODE] Procesa un cobro desde el dispositivo comerciante
+   */
+  async processCharge(
+    token: string,
+    amount: number,
+    merchantAccountId: string
+  ): Promise<PaymentResponse> {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/charge-payment`, {
+        method: 'POST',
+        body: JSON.stringify({
+          token,
+          amount,
+          merchantAccountId,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al procesar cobro');
+      }
+      
+      return {
+        success: data.success,
+        message: data.message || 'Cobro procesado exitosamente',
+        transactionId: data.transaction?.id,
+        newBalance: data.transaction?.merchantNewBalance,
+        error: data.message,
+      };
+    } catch (error: any) {
+      console.error('Error procesando cobro:', error);
+      throw new Error(error.message || 'Error al procesar el cobro');
+    }
   }
 
   /**
@@ -149,6 +211,7 @@ class APIService {
       const response = await fetchWithTimeout(`${API_BASE_URL}/card-token`);
       return response.ok;
     } catch (error) {
+      console.log(error);
       return false;
     }
   }

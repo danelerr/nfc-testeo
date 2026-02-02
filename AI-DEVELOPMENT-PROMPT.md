@@ -10,6 +10,7 @@ Estás trabajando en una **Prueba de Concepto (POC)** completada al 100% para im
 
 ### Stack Tecnológico
 - **Frontend:** React Native 0.83.1 + TypeScript 5.8.3
+- **Navegación:** React Navigation 7.x (Native Stack Navigator)
 - **Backend:** Node.js + Express (Mock API)
 - **Módulo Nativo:** Java (Android)
 - **Base de Datos:** En memoria (para la POC)
@@ -17,8 +18,7 @@ Estás trabajando en una **Prueba de Concepto (POC)** completada al 100% para im
 
 ### Estructura de Directorios Principal
 ```
-POCNFC/
-├── src/                          # Código React Native
+POCNFC/├── src/                          # Código React Native
 │   ├── screens/                  # 3 pantallas de la app
 │   │   ├── CardsScreen.tsx       # Selección de tarjetas
 │   │   ├── PaymentScreen.tsx     # Pantalla de pago NFC
@@ -27,7 +27,8 @@ POCNFC/
 │   │   ├── NFCService.ts         # Comunicación con módulo nativo
 │   │   └── APIService.ts         # Comunicación con backend
 │   └── types/                    # Tipos TypeScript
-│       └── nfc.ts
+│       ├── nfc.ts                # Tipos de NFC y tarjetas
+│       └── navigation.ts         # Tipos de React Navigation
 ├── android/app/src/main/java/com/pocnfc/  # Módulo nativo Android
 │   ├── NFCModule.java            # Bridge RN ↔ Java
 │   ├── NFCHostApduService.java   # Servicio HCE (emula tarjeta)
@@ -35,6 +36,7 @@ POCNFC/
 ├── backend/                      # API Mock
 │   ├── server.js                 # Servidor Express
 │   └── package.json
+├── App.tsx                       # Punto de entrada con Navigation
 ├── android/app/src/main/AndroidManifest.xml  # Configuración NFC
 ├── android/app/src/main/res/xml/apdu_service.xml  # AID config
 └── [Documentación extensa: README, TESTING, ROADMAP, etc.]
@@ -193,6 +195,7 @@ adb logcat | grep NFCHostApduService
 1. **[README.md](README.md)**: Documentación técnica completa (400 líneas)
 2. **[QUICKSTART.md](QUICKSTART.md)**: Guía de inicio rápido (5 min)
 3. **[PROJECT-COMPLETE.md](PROJECT-COMPLETE.md)**: Estado del proyecto y entregables
+4. **[REACT-NAVIGATION-MIGRATION.md](REACT-NAVIGATION-MIGRATION.md)**: Implementación de navegación oficial
 
 ### Prioridad Media (Para desarrollo)
 4. **[TESTING.md](TESTING.md)**: Guía exhaustiva de pruebas
@@ -214,7 +217,16 @@ adb logcat | grep NFCHostApduService
    - Wrapper TypeScript del módulo nativo
    - Interfaz limpia para componentes React
 
-10. **`src/screens/PaymentScreen.tsx`**:
+10. **`src/types/navigation.ts`**:
+    - Tipos de React Navigation centralizados
+    - Type-safety para navegación entre pantallas
+    - Definición de parámetros de rutas
+
+11. **`App.tsx`**:
+    - Configuración de NavigationContainer y Stack Navigator
+    - Punto de entrada de la aplicación
+
+12. **`src/screens/PaymentScreen.tsx`**:
     - UI principal de pago
     - Animación del ícono NFC
     - Lógica de armar/desarmar pago

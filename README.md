@@ -1,399 +1,575 @@
 # 📱 POC NFC - GanaMóvil
 
-## 🎯 ¿Qué es esto?
+**Prueba de Concepto de pagos NFC** usando **Host Card Emulation (HCE)** y **Reader Mode** para Android.
 
-**Prueba de Concepto (POC)** para implementar pagos NFC usando tecnología **Host Card Emulation (HCE)** en dispositivos Android, evaluando su viabilidad técnica para integración en GanaMóvil.
+## 📋 Tabla de Contenidos
 
-Tu smartphone Android se convierte en una **tarjeta de pago contactless** que puede ser leída por cualquier datáfono con NFC.
-
-```
-     📱 Smartphone              🏪 Datáfono
-    (GanaMóvil)                (Comercio)
-         │                          │
-         │    ◄──── NFC ────►      │
-         │                          │
-    Emite Token              Lee Token
-         │                          │
-         └──────── PAGO ───────────┘
-```
+- [Inicio Rápido](#-inicio-rápido)
+- [Arquitectura del Sistema](#-arquitectura-del-sistema)
+- [Diagramas de Flujo](#-diagramas-de-flujo)
+- [Protocolo APDU](#-protocolo-apdu)
+- [Funcionalidades](#-funcionalidades)
+- [Cómo Probar](#-cómo-probar)
+- [Documentación Adicional](#-documentación-adicional)
 
 ---
 
 ## 🚀 Inicio Rápido
 
-### ¿Primera vez? Empieza aquí:
-
-📖 **[QUICKSTART.md](./QUICKSTART.md)** - Setup y primera prueba en 5 minutos
-
-### Instalación Automática
-
-**Windows:**
-```cmd
-install.bat
-```
-
-**Mac/Linux:**
 ```bash
-chmod +x install.sh
-./install.sh
-```
-
-### Instalación Manual
-
-```bash
-# Terminal 1: Iniciar backend
+# Terminal 1: Backend Mock
 cd backend
 npm install
 npm start
 
-# Terminal 2: Iniciar app React Native
+# Terminal 2: Aplicación React Native
 npm install
-npx react-native run-android
+npm run android
 ```
 
----
-
-## 📚 Documentación
-
-| Documento | Descripción | Tiempo de Lectura |
-|-----------|-------------|-------------------|
-| [📄 SUMMARY.md](./SUMMARY.md) | Resumen visual y conceptos clave | 5 min |
-| [⚡ QUICKSTART.md](./QUICKSTART.md) | Guía de inicio rápido | 5 min |
-| [📖 README.md](./README.md) | Arquitectura completa (este archivo) | 20 min |
-| [🧪 TESTING.md](./TESTING.md) | Guía de pruebas exhaustiva | 30 min |
-| [⚙️ CONFIGURATION.md](./CONFIGURATION.md) | Configuración avanzada | 15 min |
-| [🚀 ROADMAP.md](./ROADMAP.md) | Plan hacia producción | 45 min |
-| [🎤 PRESENTATION.md](./PRESENTATION.md) | Guía de presentación | 10 min |
+**Requisitos:**
+- Node.js 20+
+- Android Studio
+- Dispositivo Android físico con NFC (el emulador NO soporta NFC)
+- JDK 17+
 
 ---
 
 ## 🏗️ Arquitectura del Sistema
 
+### Diagrama de Capas
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    REACT NATIVE APP                          │
+│                     (TypeScript)                             │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌────────────────────┐      ┌────────────────────┐        │
+│  │   MODO PAGAR ⭐    │      │   MODO COBRAR      │        │
+│  │  (Cliente/HCE)     │      │  (Comerciante)     │        │
+│  └────────────────────┘      └────────────────────┘        │
+│           │                            │                     │
+│           ├── CardsScreen             ├── AccountSelection  │
+│           ├── PaymentScreen           ├── ChargeHomeScreen  │
+│           └── SuccessScreen           ├── ChargeWaiting     │
+│                                       └── ChargeSuccess      │
+│                                                              │
+└──────────────────┬───────────────────────┬──────────────────┘
+                   │                       │
+                   ▼                       ▼
+         ┌─────────────────┐     ┌─────────────────┐
+         │   NFCService    │     │   APIService    │
+         │  (TypeScript)   │     │  (TypeScript)   │
+         └────────┬────────┘     └────────┬────────┘
+                  │                       │
+                  │                       │ HTTPS
+                  ▼                       ▼
+    ┌─────────────────────────────────────────────────┐
+    │        NATIVE BRIDGE (Java)                     │
+    ├─────────────────────────────────────────────────┤
+    │                                                 │
+    │  ┌──────────────────────┐  ┌────────────────┐ │
+    │  │ NFCHostApduService ⭐│  │   NFCModule    │ │
+    │  │   (HCE Service)      │  │ (RN Bridge)    │ │
+    │  └──────────────────────┘  └────────────────┘ │
+    │           │                        │           │
+    │           │ APDU Protocol          │ IsoDep   │
+    │           ▼                        ▼           │
+    │     ┌──────────┐            ┌──────────┐      │
+    │     │   HCE    │            │  Reader  │      │
+    │     │  Emula   │            │   Mode   │      │
+    │     │ Tarjeta  │            │   Lee    │      │
+    │     └──────────┘            └──────────┘      │
+    └─────────────────────────────────────────────────┘
+                  │                       │
+                  └───────────┬───────────┘
+                              │ NFC
+                              ▼
+                    ┌──────────────────┐
+                    │  COMUNICACIÓN    │
+                    │  NFC FÍSICA      │
+                    │  (13.56 MHz)     │
+                    └──────────────────┘
+                              ▲
+                              │
+                    ┌──────────────────┐
+                    │   BACKEND MOCK   │
+                    │    (Node.js)     │
+                    │   Express + DB   │
+                    │     In-Memory    │
+                    └──────────────────┘
+```
+
+### Componentes Principales
+
+#### 1. **Capa React Native** (Frontend)
+
+| Componente | Propósito | Tipo |
+|------------|-----------|------|
+| **App.tsx** | Configuración de navegación (Tabs + Stacks) | Root |
+| **CardsScreen** | Selección de tarjeta para pagar | HCE ⭐ |
+| **PaymentScreen** | Activa HCE y espera NFC | HCE ⭐ |
+| **SuccessScreen** | Confirmación de pago cliente | HCE ⭐ |
+| **AccountSelectionScreen** | Selección de cuenta comerciante | Reader |
+| **ChargeHomeScreen** | Ingreso de monto a cobrar | Reader |
+| **ChargeWaitingScreen** | Espera NFC del cliente | Reader |
+| **ChargeSuccessScreen** | Confirmación de cobro | Reader |
+
+#### 2. **Capa de Servicios** (TypeScript)
+
+| Servicio | Función | Métodos Clave |
+|----------|---------|---------------|
+| **NFCService** | Bridge con módulo nativo | `armPayment()`, `startReaderMode()`, `addListener()` |
+| **APIService** | Cliente HTTP REST | `getCards()`, `processCharge()`, `authorizePayment()` |
+
+#### 3. **Capa Nativa** (Java)
+
+| Clase | Función | Responsabilidad |
+|-------|---------|-----------------|
+| **NFCHostApduService** ⭐ | Servicio HCE Android | Emula tarjeta NFC, responde APDUs |
+| **NFCModule** | Bridge React Native | Expone APIs nativas a JavaScript |
+
+#### 4. **Backend Mock** (Node.js)
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/card-token` | GET | Lista de tarjetas disponibles |
+| `/card-token/:id` | GET | Token de tarjeta específica |
+| `/authorize-payment` | POST | Autoriza pago (cliente) |
+| `/charge-payment` | POST | Procesa cobro (comerciante) |
+| `/merchant-accounts` | GET | Cuentas de comerciante |
+
+---
+
+## 📊 Diagramas de Flujo
+
+### 1. Flujo Completo: Pago NFC (HCE)
+
+```mermaid
+sequenceDiagram
+    participant Cliente as 📱 Cliente<br/>(HCE)
+    participant APDU as 📡 NFCHostApduService<br/>(APDU Handler)
+    participant Comerciante as 💵 Comerciante<br/>(Reader Mode)
+    participant API as 🌐 Backend
+
+    Note over Cliente: Usuario selecciona tarjeta
+    Cliente->>Cliente: CardsScreen → selecciona tarjeta
+    Cliente->>Cliente: PaymentScreen
+    Cliente->>APDU: armPayment(token)
+    APDU-->>Cliente: ✅ Pago armado
+    
+    Note over Cliente,Comerciante: 🤝 Acercamiento físico de dispositivos
+    
+    Note over Comerciante: Usuario ingresa monto
+    Comerciante->>Comerciante: ChargeHomeScreen → ingresa $50
+    Comerciante->>Comerciante: ChargeWaitingScreen
+    Comerciante->>Comerciante: startReaderMode(50.00)
+    
+    Note over Cliente,Comerciante: 📡 NFC Detectado
+    Comerciante->>APDU: SELECT AID<br/>(F0010203040506)
+    APDU-->>Comerciante: token (1234567890123456) + 9000
+    
+    Comerciante->>APDU: GET PROCESSING OPTIONS<br/>(monto: 5000 centavos)
+    APDU->>Cliente: onPaymentAmountRequested(50.00)
+    APDU->>Cliente: onPaymentTransmitted(token, 50.00)
+    APDU-->>Comerciante: 9000 (OK)
+    
+    Note over Comerciante: Procesa cobro
+    Comerciante->>API: POST /charge-payment<br/>{token, amount: 50, merchantId}
+    API->>API: Validar token
+    API->>API: Cliente: $150 - $50 = $100
+    API->>API: Comerciante: $500 + $50 = $550
+    API-->>Comerciante: {success, transactionId, newBalance: 550}
+    
+    Comerciante->>Comerciante: ChargeSuccessScreen<br/>(Cobro exitoso: $550)
+    
+    Note over Cliente: Cliente ve resultado
+    Cliente->>Cliente: SuccessScreen<br/>(Pago exitoso: $100)
+```
+
+### 2. Flujo Detallado: Protocolo APDU
+
+```mermaid
+sequenceDiagram
+    participant Reader as Comerciante<br/>(Reader Mode)
+    participant HCE as Cliente<br/>(HCE Service)
+    
+    Note over Reader,HCE: FASE 1: SELECT AID
+    
+    Reader->>HCE: APDU SELECT<br/>00 A4 04 00 07 F0010203040506 00
+    Note over HCE: Verifica AID coincide<br/>F0010203040506
+    HCE-->>Reader: TOKEN (16 bytes) + 9000<br/>1234567890123456 9000
+    
+    Note over Reader,HCE: FASE 2: ENVIAR MONTO
+    
+    Reader->>HCE: APDU GET PROCESSING OPTIONS<br/>80 A8 00 00 04 [monto en 4 bytes] 00
+    Note over HCE: Extrae monto de bytes 5-8<br/>Convierte centavos → bolivares
+    HCE->>HCE: Emite evento onPaymentAmountRequested
+    HCE->>HCE: Emite evento onPaymentTransmitted
+    HCE-->>Reader: 9000 (SUCCESS)
+    
+    Note over Reader,HCE: Comunicación completada
+```
+
+### 3. Arquitectura de Componentes por Módulos
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     APLICACIÓN MÓVIL                         │
-│                    (React Native)                            │
-│                                                              │
-│  ┌────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │  Pantalla  │  │   Pantalla   │  │   Pantalla   │       │
-│  │  Tarjetas  │→ │     Pago     │→ │    Éxito     │       │
-│  └────────────┘  └──────────────┘  └──────────────┘       │
-│         │                │                                   │
-│         └────────────────┴───────────────┐                  │
-│                                           │                  │
-│                                    ┌──────▼──────┐          │
-│                                    │ NFCService  │          │
-│                                    │ APIService  │          │
-│                                    └──────┬──────┘          │
-└───────────────────────────────────────────┼─────────────────┘
-                                            │
-                    ┌───────────────────────┴─────────────────┐
-                    │                                          │
-         ┌──────────▼──────────┐                   ┌─────────▼────────┐
-         │   MÓDULO NATIVO     │                   │   BACKEND MOCK   │
-         │   (Java/Android)    │                   │   (Node.js)      │
-         │                     │                   │                  │
-         │  ┌───────────────┐  │                   │  /card-token     │
-         │  │  NFCModule    │  │  HTTP/HTTPS       │  /authorize-     │
-         │  │  (Bridge RN)  │◄─┼───────────────────┤   payment        │
-         │  └───────────────┘  │                   │  /balance        │
-         │                     │                   │  /transactions   │
-         │  ┌───────────────┐  │                   └──────────────────┘
-         │  │ HCE Service   │  │
-         │  │ (APDU Process)│  │
-         │  └───────┬───────┘  │
-         └──────────┼──────────┘
-                    │
-              ┌─────▼─────┐
-              │  Lector   │
-              │    NFC    │
-              │ (Datáfono)│
-              └───────────┘
+│                      APP PRINCIPAL                          │
+│                         App.tsx                             │
+└───────────────┬─────────────────────────────────────────────┘
+                │
+        ┌───────┴───────┐
+        │               │
+        ▼               ▼
+┌───────────────┐   ┌───────────────┐
+│   Tab: PAGAR  │   │  Tab: COBRAR  │
+│   (PayMode)   │   │ (ChargeMode)  │
+└───────┬───────┘   └───────┬───────┘
+        │                   │
+        │                   │
+        ▼                   ▼
+┌────────────────────────────────────────────┐
+│         STACK NAVEGACIÓN PAGAR             │
+├────────────────────────────────────────────┤
+│  1. CardsScreen                            │
+│     - Carga tarjetas desde API             │
+│     - Muestra balance disponible           │
+│     └─→ Navega a: PaymentScreen           │
+│                                            │
+│  2. PaymentScreen ⭐                       │
+│     - Llama NFCService.armPayment(token)  │
+│     - Escucha: onPaymentTransmitted       │
+│     - Escucha: onPaymentAmountRequested   │
+│     └─→ Navega a: SuccessScreen          │
+│                                            │
+│  3. SuccessScreen                          │
+│     - Muestra monto pagado                 │
+│     - Muestra nuevo balance (local)        │
+│     - NO llama backend                     │
+└────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────┐
+│        STACK NAVEGACIÓN COBRAR             │
+├────────────────────────────────────────────┤
+│  1. AccountSelectionScreen                 │
+│     - Carga cuentas de API                 │
+│     - Selecciona cuenta destino            │
+│     └─→ Navega a: ChargeHomeScreen        │
+│                                            │
+│  2. ChargeHomeScreen                       │
+│     - Input de monto a cobrar              │
+│     - Validación de monto                  │
+│     └─→ Navega a: ChargeWaitingScreen     │
+│                                            │
+│  3. ChargeWaitingScreen                    │
+│     - startReaderMode(amount)             │
+│     - Escucha: onNFCTagDetected           │
+│     - Llama: processCharge(token, amount) │
+│     └─→ Navega a: ChargeSuccessScreen    │
+│                                            │
+│  4. ChargeSuccessScreen                    │
+│     - Muestra transacción ID               │
+│     - Muestra nuevo balance                │
+│     - NO llama backend (solo display)      │
+└────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📦 Componentes Principales
+## 🔐 Protocolo APDU
 
-### 1️⃣ Backend Mock (`backend/`)
-API REST que simula el Core Bancario.
+### Estructura de Comandos
 
-**Endpoints:**
-- `GET /card-token` - Lista de tarjetas disponibles
-- `GET /card-token/:cardId` - Token de tarjeta específica
-- `POST /authorize-payment` - Autorizar y procesar pago
-- `GET /balance/:token` - Consultar saldo
-- `GET /transactions` - Historial de transacciones
+#### Comando 1: SELECT AID
 
-**Tecnología:** Node.js + Express
+```
+Enviado por: Comerciante (Reader Mode)
+Recibido por: Cliente (HCE Service)
 
-### 2️⃣ Módulo Nativo Android
+┌─────┬─────┬─────┬─────┬─────┬──────────────────────┬─────┐
+│ CLA │ INS │ P1  │ P2  │ Lc  │       AID            │ Le  │
+├─────┼─────┼─────┼─────┼─────┼──────────────────────┼─────┤
+│ 00  │ A4  │ 04  │ 00  │ 07  │ F0 01 02 03 04 05 06 │ 00  │
+└─────┴─────┴─────┴─────┴─────┴──────────────────────┴─────┘
+  │     │     │     │     │              │              │
+  │     │     │     │     │              │              └─ Le: Longitud esperada
+  │     │     │     │     │              └──────────────── AID: 7 bytes
+  │     │     │     │     └───────────────────────────── Lc: Longitud AID
+  │     │     │     └─────────────────────────────────── P2: First occurrence
+  │     │     └───────────────────────────────────────── P1: Select by name
+  │     └─────────────────────────────────────────────── INS: SELECT
+  └───────────────────────────────────────────────────── CLA: ISO 7816
 
-#### **NFCHostApduService.java**
-Servicio HCE que responde a comandos APDU del lector NFC.
+Respuesta:
+┌──────────────────────────┬─────┬─────┐
+│     TOKEN (16 bytes)     │ SW1 │ SW2 │
+├──────────────────────────┼─────┼─────┤
+│  1234567890123456        │ 90  │ 00  │
+└──────────────────────────┴─────┴─────┘
+                              │     │
+                              │     └─ SW2: OK
+                              └─────── SW1: Success
+```
 
-**Funcionalidades:**
-- Procesa comando SELECT AID (`00A40400`)
-- AID privado para pruebas: `F0010203040506`
-- Responde con token + código de éxito (`9000`)
-- Maneja desactivación automática
+#### Comando 2: GET PROCESSING OPTIONS (con monto)
 
-#### **NFCModule.java**
-Bridge entre React Native y el servicio nativo.
+```
+Enviado por: Comerciante (Reader Mode)
+Recibido por: Cliente (HCE Service)
 
-**Métodos:**
-- `isNFCSupported()` - Verifica soporte NFC
-- `isNFCEnabled()` - Verifica si NFC está activo
-- `armPayment(token)` - Configura token para transmisión
-- `disarmPayment()` - Limpia token
-- `openNFCSettings()` - Abre configuración del sistema
+┌─────┬─────┬─────┬─────┬─────┬────────────────────────┬─────┐
+│ CLA │ INS │ P1  │ P2  │ Lc  │   AMOUNT (4 bytes)     │ Le  │
+├─────┼─────┼─────┼─────┼─────┼────────────────────────┼─────┤
+│ 80  │ A8  │ 00  │ 00  │ 04  │ 00 00 13 88 (5000¢)   │ 00  │
+└─────┴─────┴─────┴─────┴─────┴────────────────────────┴─────┘
+  │     │                         │
+  │     │                         └─ Monto en centavos (Big Endian)
+  │     │                            5000 centavos = 50.00 Bs
+  │     └───────────────────────── INS: GET PROCESSING OPTIONS
+  └─────────────────────────────── CLA: Proprietary
 
-### 3️⃣ Aplicación React Native
+Respuesta:
+┌─────┬─────┐
+│ SW1 │ SW2 │
+├─────┼─────┤
+│ 90  │ 00  │
+└─────┴─────┘
+   │     │
+   │     └─ OK
+   └─────── Success
+```
 
-#### **Servicios:**
-- **NFCService.ts** - Comunicación con módulo nativo
-- **APIService.ts** - Comunicación con backend
+### Códigos de Estado (Status Words)
 
-#### **Pantallas:**
-- **CardsScreen** - Selección de tarjeta
-- **PaymentScreen** - Preparación y activación NFC
-- **SuccessScreen** - Confirmación de pago
+| SW1-SW2 | Significado | Acción |
+|---------|-------------|--------|
+| `90 00` | Success | Comando ejecutado correctamente |
+| `6A 82` | File not found | AID no coincide o servicio no listo |
+| `6D 00` | Instruction not supported | Comando APDU no reconocido |
 
 ---
 
-## 🔐 Protocolo APDU Simplificado
+## ✨ Funcionalidades
 
-### Comando SELECT AID
-```
-Entrada: 00 A4 04 00 07 F0010203040506
-         │  │  │  │  │  └─ AID (7 bytes)
-         │  │  │  │  └─ Longitud AID
-         │  │  │  └─ P2
-         │  │  └─ P1 (04 = Select by name)
-         │  └─ INS (A4 = SELECT)
-         └─ CLA (00 = ISO)
+### ✅ Implementadas (HCE - CORE)
 
-Respuesta: [TOKEN DE 16 DÍGITOS] 90 00
-           Ejemplo: 31323334...3536 9000
-                                     └─ Status OK
-```
+#### Modo Pagar (Cliente)
 
-### Códigos de Estado
-- `90 00` - Success (todo bien)
-- `6A 82` - File not found (AID no coincide)
-- `6D 00` - Instruction not supported (comando desconocido)
+- ✅ **Host Card Emulation funcional**
+  - Dispositivo Android emula tarjeta NFC
+  - Responde a comandos APDU estándar
+  - AID registrado: `F0010203040506`
+
+- ✅ **Transmisión de tokens**
+  - Token de 16 dígitos
+  - Transmisión en respuesta a SELECT AID
+  - Evento `onPaymentTransmitted` a React Native
+
+- ✅ **Recepción de monto del terminal**
+  - Terminal envía monto en GPO command
+  - HCE extrae y convierte centavos → bolivares
+  - Evento `onPaymentAmountRequested` a React Native
+
+- ✅ **UI completa**
+  - Selección de tarjetas
+  - Preparación de pago
+  - Pantalla de éxito con balance actualizado
+
+#### Modo Cobrar (Comerciante)
+
+- ✅ **Reader Mode funcional**
+  - Detección de dispositivos NFC (HCE)
+  - Lectura de tokens mediante IsoDep
+  - Envío de monto en segundo comando APDU
+
+- ✅ **Protocolo de 2 comandos**
+  1. SELECT AID → recibe token
+  2. GET PROCESSING OPTIONS → envía monto
+
+- ✅ **Procesamiento de cobros**
+  - Llamada única al backend desde `ChargeWaitingScreen`
+  - Actualización de balances en backend
+  - Pantalla de éxito con ID de transacción
+
+#### Backend Mock
+
+- ✅ **Base de datos en memoria**
+  - 2 tarjetas cliente (débito/crédito)
+  - 3 cuentas comerciante (ahorros/corriente/nómina)
+  - Historial de transacciones
+
+- ✅ **Endpoints REST completos**
+  - Gestión de tarjetas
+  - Procesamiento de pagos y cobros
+  - Actualización de balances
+
+### ⚠️ Limitaciones Conocidas
+
+#### Seguridad (NO USAR EN PRODUCCIÓN)
+
+- ❌ **Tokens estáticos**: El token no cambia por transacción
+- ❌ **Sin criptografía**: Comunicación NFC sin cifrado
+- ❌ **Sin autenticación**: No hay validación de certificados
+- ❌ **Sin PCI-DSS**: No cumple estándares de seguridad de pagos
+
+#### Funcionalidad
+
+- ⚠️ **Base de datos volátil**: Los saldos se reinician al reiniciar el servidor
+- ⚠️ **Sin persistencia**: No hay almacenamiento local de transacciones
+- ⚠️ **Android únicamente**: iOS requiere implementación diferente
 
 ---
 
 ## 🧪 Cómo Probar
 
-### Opción 1: Con Otro Teléfono Android (Recomendado)
-1. Descarga "NFC Tools" en un segundo teléfono Android
-2. En GanaMóvil POC:
-   - Selecciona una tarjeta
-   - Presiona "Preparar Pago"
-   - Espera la animación 📡
-3. Acerca ambos teléfonos (dorso con dorso)
-4. El segundo teléfono debería leer el token de 16 dígitos
+### Opción 1: Dos Dispositivos Android
 
-### Opción 2: Con Datáfono Real
-1. Configura el datáfono para aceptar el AID `F0010203040506`
-2. Prepara el pago en la app
-3. Acerca el teléfono al lector del datáfono
+**Requisitos:**
+- 2 dispositivos Android con NFC
+- App instalada en ambos
 
-**Más detalles:** Ver [TESTING.md](./TESTING.md)
+**Pasos:**
 
----
+1. **Dispositivo 1 (Cliente):**
+   ```
+   1. Abrir app → Tab "Pagar"
+   2. Seleccionar tarjeta
+   3. Presionar "Preparar Pago"
+   4. Esperar mensaje "Listo para Pagar"
+   ```
 
-## 🎯 Resultados de la POC
+2. **Dispositivo 2 (Comerciante):**
+   ```
+   1. Abrir app → Tab "Cobrar"
+   2. Seleccionar cuenta destino
+   3. Ingresar monto (ej: 50)
+   4. Presionar "Continuar"
+   5. Pantalla muestra "Esperando dispositivo..."
+   ```
 
-### ✅ Factibilidad Demostrada
-- [x] HCE funciona en Android 4.4+
-- [x] Token se transmite correctamente
-- [x] No requiere Secure Element
-- [x] Compatible con datáfonos EMV estándar
-- [x] Performance < 1 segundo
-- [x] UI fluida y clara
+3. **Acercar dispositivos (dorso con dorso)**
+   - Cliente recibe vibración
+   - Comerciante muestra confirmación
+   - Ambos ven nuevos balances
 
-### ⚠️ Limitaciones Identificadas
-- [ ] Solo Android (iOS requiere Apple Pay)
-- [ ] Requiere desbloqueo del dispositivo
-- [ ] Alcance NFC limitado (2-4 cm)
-- [ ] Tokens estáticos (inseguro para producción)
-- [ ] Sin certificación EMV
-- [ ] Protocolo EMV simplificado
+### Opción 2: Con App "NFC Tools" (Solo Lectura)
 
-**Análisis completo:** Ver [ROADMAP.md](./ROADMAP.md)
-
----
-
-## 📁 Estructura del Proyecto
-
+**Dispositivo 1 (Cliente):**
 ```
-POCNFC/
-├── backend/                    # Backend Mock Node.js
-│   ├── server.js              # API REST
-│   ├── package.json
-│   └── README.md
-├── android/
-│   └── app/src/main/
-│       ├── AndroidManifest.xml      # Permisos NFC
-│       ├── res/
-│       │   ├── xml/
-│       │   │   └── apdu_service.xml # Configuración AID
-│       │   └── values/
-│       │       └── strings.xml       # Strings NFC
-│       └── java/com/pocnfc/
-│           ├── NFCHostApduService.java  # Servicio HCE ⭐
-│           ├── NFCModule.java           # Bridge RN ⭐
-│           ├── NFCPackage.java          # Registro módulo
-│           ├── MainActivity.kt
-│           └── MainApplication.kt
-├── src/
-│   ├── screens/
-│   │   ├── CardsScreen.tsx      # Pantalla tarjetas
-│   │   ├── PaymentScreen.tsx    # Pantalla pago NFC
-│   │   └── SuccessScreen.tsx    # Pantalla éxito
-│   ├── services/
-│   │   ├── NFCService.ts        # Servicio NFC nativo
-│   │   └── APIService.ts        # Servicio API backend
-│   └── types/
-│       └── nfc.ts              # Tipos TypeScript
-├── App.tsx                     # App principal
-├── package.json
-└── Documentación/
-    ├── README.md               # Este archivo
-    ├── QUICKSTART.md          # Inicio rápido
-    ├── SUMMARY.md             # Resumen visual
-    ├── TESTING.md             # Guía de pruebas
-    ├── CONFIGURATION.md       # Configuración avanzada
-    ├── ROADMAP.md             # Plan para producción
-    └── PRESENTATION.md        # Guía de presentación
+1. Instalar "NFC Tools" de Play Store
+2. Seleccionar "Leer"
+```
+
+**Dispositivo 2 (Tu app):**
+```
+1. Modo Pagar → Preparar Pago
+2. Acercar dispositivos
+3. "NFC Tools" mostrará: 1234567890123456
+```
+
+### Opción 3: Con Datáfono Real (Avanzado)
+
+**Requisitos:**
+- Datáfono configurable (ej: PAX, Ingenico)
+- Acceso para configurar AID personalizado
+
+**Configuración:**
+```
+1. Configurar AID en terminal: F0010203040506
+2. Preparar pago en app
+3. Acercar teléfono al lector
+4. Terminal recibirá token: 1234567890123456
 ```
 
 ---
 
-## 🛠️ Troubleshooting
+## 🔧 Solución de Problemas
 
-### El NFC no se activa
-1. Verifica que NFC esté habilitado en Ajustes
-2. Confirma que el dispositivo tenga HCE (Android 4.4+)
-3. Revisa los logs: `adb logcat | grep NFCHostApduService`
+### "Pagos se procesan 2 veces"
 
-### El lector no detecta el teléfono
-1. Asegúrate de que el pago esté "armado" (pantalla de ondas 📡)
-2. Acerca el **dorso** del teléfono al centro del lector
-3. Mantén la posición por 2-3 segundos
+**Causa**: Backend llamado desde múltiples pantallas
 
-### Error de conexión con backend
-1. Verifica que el servidor esté corriendo: `http://localhost:3000/card-token`
-2. Si usas dispositivo físico, usa ngrok: `ngrok http 3000`
-3. Actualiza la URL en [src/services/APIService.ts](src/services/APIService.ts)
+**Solución aplicada**: 
+- Solo `ChargeWaitingScreen` llama `processCharge()`
+- `ChargeSuccessScreen` solo muestra resultados
 
-**Más soluciones:** Ver [TESTING.md](./TESTING.md) y [CONFIGURATION.md](./CONFIGURATION.md)
+### "Los saldos se reinician"
 
----
+**Causa**: Base de datos en memoria del backend
 
-## 🎓 Conceptos Clave
+**Solución**: Esto es normal en el POC. Para producción:
+```javascript
+// Reemplazar mockDatabase con:
+const db = new PostgreSQL(connectionString);
+```
 
-### HCE (Host Card Emulation)
-Permite que Android emule una tarjeta NFC sin necesitar un chip de seguridad físico (Secure Element). El sistema operativo gestiona la comunicación APDU.
+### "NFC no detecta dispositivo"
 
-### APDU (Application Protocol Data Unit)
-Unidad de datos del protocolo de comunicación entre la tarjeta (teléfono) y el lector (datáfono).
+**Checklist**:
+1. ✅ NFC habilitado en ambos dispositivos
+2. ✅ App en primer plano
+3. ✅ Dorso con dorso (antena NFC está atrás)
+4. ✅ Distancia < 4cm
+5. ✅ Cliente en pantalla "Preparar Pago"
+6. ✅ Comerciante en pantalla "Esperando..."
 
-### AID (Application ID)
-Identificador único de 5-16 bytes que el lector busca para comunicarse con la aplicación correcta.
+### "Emulador no funciona"
 
-### EMV
-Estándar global para pagos con tarjeta (Europay, Mastercard, Visa).
-
----
-
-## 🔐 Nota de Seguridad
-
-⚠️ **Esta POC NO es segura para producción**. 
-
-Implementaciones necesarias para producción:
-
-1. **Tokenización Dinámica:** Tokens EMV que cambian por transacción
-2. **Criptografía:** Protocolo EMV completo con 3DES/AES
-3. **Certificación PCI-DSS:** Cumplir estándares de seguridad
-4. **Certificación EMVCo:** Certificación oficial
-5. **Biometría:** Validar identidad antes de cada pago
-6. **HSM:** Hardware Security Module para claves
-7. **Auditorías:** Pruebas de penetración y seguridad
-
-**Detalles completos:** Ver [ROADMAP.md](./ROADMAP.md)
+⚠️ **El emulador de Android NO soporta NFC**. Debes usar dispositivos físicos.
 
 ---
 
-## 📊 Próximos Pasos (Si se decide continuar)
+## 📚 Documentación Adicional
 
-1. ✅ **Validar factibilidad técnica** ← Estás aquí
-2. 🔜 Integrar con Core Bancario real
-3. 🔜 Implementar protocolo EMV completo
-4. 🔜 Obtener certificaciones (PCI-DSS, EMVCo)
-5. 🔜 Pruebas de seguridad y penetración
-6. 🔜 Piloto con usuarios reales
-7. 🔜 Lanzamiento en producción
-
-**Timeline estimado:** 14-20 meses | **Inversión:** $275K-$470K
-
-**Plan detallado:** Ver [ROADMAP.md](./ROADMAP.md)
+| Archivo | Descripción |
+|---------|-------------|
+| [HCE-VS-READER-MODE.md](./HCE-VS-READER-MODE.md) | Explicación técnica HCE vs Reader Mode |
+| [PAYMENT-FLOW-FIX.md](./PAYMENT-FLOW-FIX.md) | Corrección del flujo de pago doble |
+| [AI-DEVELOPMENT-PROMPT.md](./AI-DEVELOPMENT-PROMPT.md) | Guía completa para desarrollo |
+| [backend/README.md](./backend/README.md) | API endpoints y mock database |
 
 ---
 
-## 📞 Recursos y Referencias
+## 🛠️ Stack Tecnológico
 
-### Documentación Oficial
-- [Android HCE Guide](https://developer.android.com/guide/topics/connectivity/nfc/hce)
-- [EMV Specifications](https://www.emvco.com/specifications/)
-- [ISO 7816-4 (APDU)](https://www.iso.org/standard/54550.html)
-- [PCI Mobile Security Guidelines](https://www.pcisecuritystandards.org/documents/Mobile-Payment-Acceptance-Security-Guidelines-v1.pdf)
-
-### Casos de Éxito
-- Nubank (Brasil) - Implementación HCE completa
-- Nequi (Colombia) - Pagos contactless
-- N26 (Europa) - Digital bank con NFC
-
----
-
-## 👥 Equipo y Créditos
-
-POC desarrollada como demostración técnica para evaluar viabilidad de NFC en GanaMóvil.
-
-**Tecnologías utilizadas:**
-- React Native 0.83
-- Node.js + Express
-- Android HCE
-- Java (Native Android)
-- TypeScript
+| Capa | Tecnología | Versión |
+|------|------------|---------|
+| **Frontend** | React Native | 0.83.1 |
+| **Lenguaje** | TypeScript | 5.8.3 |
+| **Navegación** | React Navigation | 7.x |
+| **Bridge Nativo** | Java | 17 |
+| **Backend** | Node.js + Express | 20+ |
+| **Protocolo NFC** | APDU ISO 7816 | - |
+| **Android NFC APIs** | HCE + Reader Mode | API 19+ |
 
 ---
 
 ## 📄 Licencia
 
-Código de prueba - Uso interno únicamente.
+Este es un **POC (Proof of Concept)** con fines educativos. 
 
-Esta POC no debe ser usada en producción sin las modificaciones de seguridad necesarias.
-
----
-
-## 🎉 ¡Felicidades!
-
-Has completado la revisión de la documentación principal.
-
-**¿Qué hacer ahora?**
-
-- 🚀 **Probar la POC:** [QUICKSTART.md](./QUICKSTART.md)
-- 🧪 **Testing detallado:** [TESTING.md](./TESTING.md)
-- 📊 **Evaluar producción:** [ROADMAP.md](./ROADMAP.md)
-- ⚙️ **Configurar avanzado:** [CONFIGURATION.md](./CONFIGURATION.md)
-- 🎤 **Preparar presentación:** [PRESENTATION.md](./PRESENTATION.md)
+**NO USAR EN PRODUCCIÓN** sin implementar:
+- ✅ Tokenización dinámica (EMV tokens)
+- ✅ Cifrado de comunicación NFC
+- ✅ Certificación PCI-DSS
+- ✅ Autenticación de dispositivos
+- ✅ Auditoría de seguridad completa
 
 ---
 
-**POC Completada:** 26 de enero de 2026
-**Estado:** ✅ Lista para demo
-**Resultado:** ✅ Viabilidad técnica demostrada
+## 👨‍💻 Desarrollo
+
+**Creado para**: GanaMóvil  
+**Tecnología Core**: Host Card Emulation (Android HCE)  
+**Año**: 2026
+
+---
+
+## 🆘 Soporte
+
+Para preguntas técnicas, revisar:
+1. Logs de Android Studio: `adb logcat | grep NFC`
+2. Logs de Metro Bundler
+3. Logs del backend: `backend/logs`
